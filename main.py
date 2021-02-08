@@ -1,13 +1,18 @@
 import os
 
 import discord
+from discord.ext import commands
+import host_commands
 
 TOKEN = os.getenv('DISCORD_TOKEN')
+PREFIX = os.getenv('DISCORD_PREFIX')
 
-client = discord.Client()
+if not(PREFIX):
+    PREFIX="?"
 
-@client.event
-async def on_ready():
-    print(f'{client.user} has connected to Discord!')
+bot = commands.Bot(command_prefix=commands.when_mentioned_or(PREFIX))
 
-client.run(TOKEN)
+# Adds different command modules to the bot
+bot.add_cog(host_commands.Host(bot))
+
+bot.run(TOKEN)
