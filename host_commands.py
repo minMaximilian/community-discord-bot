@@ -21,14 +21,36 @@ class Host(commands.Cog):
 
     @commands.command(name='addGame', help='Adds the game as a possible candidate for scheduling and registries')
     async def addGame(self, ctx, game:str):
-        with open(str(ctx.guild.id) + ".json", "r") as f:
+        with open(str(ctx.guild.id) + ".json", "r+") as f:
+            flag = False
             data = json.load(f)
             payload =  {
                     'registry': {},
                     'schedule': {}
             }
-            data[ctx.guild.id]['games'][game.lower()] = payload
-        await ctx.reply(f'Succesfully added {game} as a possible candidate for scheduling and registries')
+            if not(str(game.lower()) in data[str(ctx.guild.id)]['games']):
+                data[str(ctx.guild.id)]['games'][str(game.lower())] = payload
+                f.seek(0)
+                json.dump(data, f, indent=4)
+                flag = True
+                await ctx.reply(f'Succesfully added {game} as a possible candidate for scheduling and registries')
+            else:
+                await ctx.reply(f'{game.capitalize()} already exists as a possible candidate')
+        
+    
+    @commands.command(name='removeGame', help='Adds a game to be used within scheduler commands')
+    async def removeGame(self, ctx, game: str):
+        with open(str(ctx.guild.id) + ".json", "r+") as f:
+            flag = False
+            data = json.load(f)
+            if str(game.lower()) in data[str(ctx.guild.id)]['games']:
+                data[str(ctx.guild.id)]['games'].pop(str(game.lower()))
+                f.seek(0)
+                json.dump(data, f, indent=4)
+                flag = True
+                await ctx.reply(f'{game.capitalize()} succesfully removed')
+            else:
+                await ctx.reply(f'{game.capitalize()} doesn\'t exist')
 
 
     @commands.command(name='setRegistry', help='Sets the registry channel')
@@ -42,11 +64,3 @@ class Host(commands.Cog):
     @commands.command(name='removeSchedule', help='Removes scheduled item')
     async def removeSchedule(self, ctx, schedule, game: str):
         await ctx.reply(f'Succesfully unscheduled a game @{schedule} for {game.capitalize()}')
-    
-    @commands.command(name='addGame', help='Adds a game to be used within scheduler commands')
-    async def addGame(self, ctx, game: str):
-        await ctx.reply(f'{game.capitalize()} succesfully added')
-
-    @commands.command(name='removeGame', help='Adds a game to be used within scheduler commands')
-    async def removeGame(self, ctx, game: str):
-        await ctx.reply(f'{game.capitalize()} succesfully removed')

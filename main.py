@@ -34,7 +34,7 @@ async def start_up():
 
         if not(os.path.isfile(file_name)):
             with open(file_name, "w") as f:
-                json.dump(data, f)
+                json.dump(data, f, indent=4)
 
 # Adds different command modules to the bot
 bot.add_cog(host_commands.Host(bot))
