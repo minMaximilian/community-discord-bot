@@ -21,36 +21,35 @@ class Host(commands.Cog):
 
     @commands.command(name='addGame', help='Adds the game as a possible candidate for scheduling and registries')
     async def addGame(self, ctx, game:str):
-        with open(str(ctx.guild.id) + ".json", "r+") as f:
-            flag = False
+        file_name = str(ctx.guild.id) + ".json"
+        with open(file_name, "r") as f:
             data = json.load(f)
-            payload =  {
-                    'registry': {},
-                    'schedule': {}
-            }
-            if not(str(game.lower()) in data[str(ctx.guild.id)]['games']):
+        payload =  {
+                'registry': {},
+                'schedule': {}
+        }
+        
+        if not(str(game.lower()) in data[str(ctx.guild.id)]['games']):
+            with open(file_name, "w") as f:
                 data[str(ctx.guild.id)]['games'][str(game.lower())] = payload
-                f.seek(0)
                 json.dump(data, f, indent=4)
-                flag = True
                 await ctx.reply(f'Succesfully added {game} as a possible candidate for scheduling and registries')
-            else:
-                await ctx.reply(f'{game.capitalize()} already exists as a possible candidate')
+        else:
+            await ctx.reply(f'{game.capitalize()} already exists as a possible candidate')
         
     
     @commands.command(name='removeGame', help='Adds a game to be used within scheduler commands')
     async def removeGame(self, ctx, game: str):
-        with open(str(ctx.guild.id) + ".json", "r+") as f:
-            flag = False
+        file_name = str(ctx.guild.id) + ".json"
+        with open(file_name, "r") as f:
             data = json.load(f)
-            if str(game.lower()) in data[str(ctx.guild.id)]['games']:
+        if str(game.lower()) in data[str(ctx.guild.id)]['games']:
+            with open(file_name, "w") as f:      
                 data[str(ctx.guild.id)]['games'].pop(str(game.lower()))
-                f.seek(0)
                 json.dump(data, f, indent=4)
-                flag = True
                 await ctx.reply(f'{game.capitalize()} succesfully removed')
-            else:
-                await ctx.reply(f'{game.capitalize()} doesn\'t exist')
+        else: # hit this bad boy
+            await ctx.reply(f'{game.capitalize()} doesn\'t exist')
 
 
     @commands.command(name='setRegistry', help='Sets the registry channel')
