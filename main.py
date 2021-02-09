@@ -28,7 +28,7 @@ async def start_up():
         
         data = {
             guild.id: {
-                'registry': {}
+                'games': {}
             }
         }
 

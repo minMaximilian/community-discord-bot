@@ -1,6 +1,7 @@
 import discord
 
 from discord.ext import commands
+import json
 
 class Host(commands.Cog):
     def __init__(self, bot):
@@ -11,15 +12,27 @@ class Host(commands.Cog):
         await ctx.reply('pong', mention_author=False)
 
     @commands.command(name='registry', help='Shows a tabulation of all users registered')
-    async def registry(self, ctx):
+    async def registry(self, ctx, game:str):
         await ctx.reply('Registry', mention_author=False)
 
     @commands.command(name='register', help='Allows registration for a the ingame tag')
     async def register(self, ctx, tag:str, game:str):
         await ctx.reply(f'Succesfully added {tag} to the player {ctx.message.author.mention} to the {game.capitalize()} registry', mention_author=False)
 
+    @commands.command(name='addGame', help='Adds the game as a possible candidate for scheduling and registries')
+    async def addGame(self, ctx, game:str):
+        with open(str(ctx.guild.id) + ".json", "r") as f:
+            data = json.load(f)
+            payload =  {
+                    'registry': {},
+                    'schedule': {}
+            }
+            data[ctx.guild.id]['games'][game.lower()] = payload
+        await ctx.reply(f'Succesfully added {game} as a possible candidate for scheduling and registries')
+
+
     @commands.command(name='setRegistry', help='Sets the registry channel')
-    async def setRegistry(self, ctx, game:str):
+    async def setRegistry(self, ctx, game:str):      
         await ctx.send(f'Successfuly set registry in {ctx.message.channel.mention} for {game.capitalize()}', delete_after=3.0)
 
     @commands.command(name='addSchedule', help='Schedules the game')
