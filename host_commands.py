@@ -13,16 +13,26 @@ class Host(commands.Cog):
 
     @commands.command(name='registry', help='Shows a tabulation of all users registered')
     async def registry(self, ctx, game:str):
-        await ctx.reply('Registry', mention_author=False)
+        file_name = str(ctx.guild.id) + ".json"
+        with open(file_name, "r") as f:
+            data = json.load(f)
+        if str(game.lower()) in data:
+            with open(file_name, "w") as f:
+                data[str(game.lower())]['registry']['channel']=ctx.message.channel.id
+                json.dump(data, f, indent=4)
+            await ctx.reply(f'Succesfully set the {ctx.message.channel.mention} channel as the registry for {game}', mention_author=False, delete_after=3.0)
+            await ctx.send(embed=await self.generateEmbed(data, game))
+        else:
+            await ctx.reply(f'Couldn\'t find the game within the possible candidates')
 
     @commands.command(name='register', help='Allows registration for a the ingame tag')
     async def register(self, ctx, tag:str, game:str):
         file_name = str(ctx.guild.id) + ".json"
         with open(file_name, "r") as f:
             data = json.load(f)
-        if str(game.lower()) in data['games']:
+        if str(game.lower()) in data:
             with open(file_name, "w") as f:
-                data['games'][str(game.lower())]['registry']['players'][ctx.author.id] = tag
+                data[str(game.lower())]['registry']['players'][ctx.author.id] = tag
                 json.dump(data, f, indent=4)
                 await ctx.reply(f'Succesfully added {tag} to the player {ctx.message.author.mention} to the {game.capitalize()} registry', mention_author=False)
         else:
@@ -38,9 +48,9 @@ class Host(commands.Cog):
                 'schedule': {}
         }
         
-        if not(str(game.lower()) in data['games']):
+        if not(str(game.lower()) in data):
             with open(file_name, "w") as f:
-                data['games'][str(game.lower())] = payload
+                data[str(game.lower())] = payload
                 json.dump(data, f, indent=4)
                 await ctx.reply(f'Succesfully added {game} as a possible candidate for scheduling and registries')
         else:
@@ -52,9 +62,9 @@ class Host(commands.Cog):
         file_name = str(ctx.guild.id) + ".json"
         with open(file_name, "r") as f:
             data = json.load(f)
-        if str(game.lower()) in data['games']:
+        if str(game.lower()) in data:
             with open(file_name, "w") as f:      
-                data['games'].pop(str(game.lower()))
+                data.pop(str(game.lower()))
                 json.dump(data, f, indent=4)
                 await ctx.reply(f'{game.capitalize()} succesfully removed')
         else:
@@ -72,3 +82,10 @@ class Host(commands.Cog):
     @commands.command(name='removeSchedule', help='Removes scheduled item')
     async def removeSchedule(self, ctx, schedule, game: str):
         await ctx.reply(f'Succesfully unscheduled a game @{schedule} for {game.capitalize()}')
+
+    async def generateEmbed(self, data, game):
+        iterable = data[game.lower()]['registry']['players'].items()
+        descriptor = ''
+        for key, val in iterable:
+            descriptor += f'<@{key}>: {val}\n'
+        return discord.Embed(title=f"Concurrently {len(iterable)} registered for {game.capitalize()}", description=descriptor)

@@ -27,7 +27,6 @@ async def start_up():
         file_name = str(guild.id) + ".json"
         
         data = {
-                'games': {}
         }
 
         if not(os.path.isfile(file_name)):
