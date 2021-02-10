@@ -29,9 +29,9 @@ class Host(commands.Cog):
                 'schedule': {}
         }
         
-        if not(str(game.lower()) in data[str(ctx.guild.id)]['games']):
+        if not(str(game.lower()) in data['games']):
             with open(file_name, "w") as f:
-                data[str(ctx.guild.id)]['games'][str(game.lower())] = payload
+                data['games'][str(game.lower())] = payload
                 json.dump(data, f, indent=4)
                 await ctx.reply(f'Succesfully added {game} as a possible candidate for scheduling and registries')
         else:
@@ -43,12 +43,12 @@ class Host(commands.Cog):
         file_name = str(ctx.guild.id) + ".json"
         with open(file_name, "r") as f:
             data = json.load(f)
-        if str(game.lower()) in data[str(ctx.guild.id)]['games']:
+        if str(game.lower()) in data['games']:
             with open(file_name, "w") as f:      
-                data[str(ctx.guild.id)]['games'].pop(str(game.lower()))
+                data['games'].pop(str(game.lower()))
                 json.dump(data, f, indent=4)
                 await ctx.reply(f'{game.capitalize()} succesfully removed')
-        else: # hit this bad boy
+        else:
             await ctx.reply(f'{game.capitalize()} doesn\'t exist')
 
 
