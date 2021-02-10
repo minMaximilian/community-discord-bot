@@ -18,10 +18,11 @@ class Host(commands.Cog):
             data = json.load(f)
         if str(game.lower()) in data:
             with open(file_name, "w") as f:
+                await ctx.reply(f'Succesfully set the {ctx.message.channel.mention} channel as the registry for {game}', mention_author=False, delete_after=3.0)
+                embed = await ctx.send(embed=await self.generateEmbed(data, game))
                 data[str(game.lower())]['registry']['channel']=ctx.message.channel.id
+                data[str(game.lower())]['registry']['embed']=embed.id
                 json.dump(data, f, indent=4)
-            await ctx.reply(f'Succesfully set the {ctx.message.channel.mention} channel as the registry for {game}', mention_author=False, delete_after=3.0)
-            await ctx.send(embed=await self.generateEmbed(data, game))
         else:
             await ctx.reply(f'Couldn\'t find the game within the possible candidates')
 
@@ -32,9 +33,13 @@ class Host(commands.Cog):
             data = json.load(f)
         if str(game.lower()) in data:
             with open(file_name, "w") as f:
-                data[str(game.lower())]['registry']['players'][ctx.author.id] = tag
+                data[str(game.lower())]['registry']['players'][str(ctx.author.id)] = tag
                 json.dump(data, f, indent=4)
                 await ctx.reply(f'Succesfully added {tag} to the player {ctx.message.author.mention} to the {game.capitalize()} registry', mention_author=False)
+                if 'embed' in data[str(game.lower())]['registry']:
+                    channel = self.bot.get_channel(int(data[str(game.lower())]['registry']['channel']))
+                    embed = await channel.fetch_message(int(data[str(game.lower())]['registry']['embed']))
+                    await embed.edit(embed=await self.generateEmbed(data, game))
         else:
             await ctx.reply(f'Couldn\'t add the user to the registry, please try correcting the game name')
             
