@@ -17,15 +17,24 @@ class Host(commands.Cog):
 
     @commands.command(name='register', help='Allows registration for a the ingame tag')
     async def register(self, ctx, tag:str, game:str):
-        await ctx.reply(f'Succesfully added {tag} to the player {ctx.message.author.mention} to the {game.capitalize()} registry', mention_author=False)
-
+        file_name = str(ctx.guild.id) + ".json"
+        with open(file_name, "r") as f:
+            data = json.load(f)
+        if str(game.lower()) in data['games']:
+            with open(file_name, "w") as f:
+                data['games'][str(game.lower())]['registry']['players'][ctx.author.id] = tag
+                json.dump(data, f, indent=4)
+                await ctx.reply(f'Succesfully added {tag} to the player {ctx.message.author.mention} to the {game.capitalize()} registry', mention_author=False)
+        else:
+            await ctx.reply(f'Couldn\'t add the user to the registry, please try correcting the game name')
+            
     @commands.command(name='addGame', help='Adds the game as a possible candidate for scheduling and registries')
     async def addGame(self, ctx, game:str):
         file_name = str(ctx.guild.id) + ".json"
         with open(file_name, "r") as f:
             data = json.load(f)
         payload =  {
-                'registry': {},
+                'registry': {'players': {}},
                 'schedule': {}
         }
         
