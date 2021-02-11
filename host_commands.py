@@ -12,6 +12,7 @@ class Host(commands.Cog):
         await ctx.reply('pong', mention_author=False)
 
     @commands.command(name='registry', help='Shows a tabulation of all users registered')
+    @commands.is_owner()
     async def registry(self, ctx, game:str):
         file_name = str(ctx.guild.id) + ".json"
         with open(file_name, "r") as f:
@@ -44,6 +45,7 @@ class Host(commands.Cog):
             await ctx.reply(f'Couldn\'t add the user to the registry, please try correcting the game name')
             
     @commands.command(name='addGame', help='Adds the game as a possible candidate for scheduling and registries')
+    @commands.is_owner()
     async def addGame(self, ctx, game:str):
         file_name = str(ctx.guild.id) + ".json"
         with open(file_name, "r") as f:
@@ -63,6 +65,7 @@ class Host(commands.Cog):
         
     
     @commands.command(name='removeGame', help='Adds a game to be used within scheduler commands')
+    @commands.is_owner()
     async def removeGame(self, ctx, game: str):
         file_name = str(ctx.guild.id) + ".json"
         with open(file_name, "r") as f:
@@ -74,11 +77,6 @@ class Host(commands.Cog):
                 await ctx.reply(f'{game.capitalize()} succesfully removed')
         else:
             await ctx.reply(f'{game.capitalize()} doesn\'t exist')
-
-
-    @commands.command(name='setRegistry', help='Sets the registry channel')
-    async def setRegistry(self, ctx, game:str):      
-        await ctx.send(f'Successfuly set registry in {ctx.message.channel.mention} for {game.capitalize()}', delete_after=3.0)
 
     @commands.command(name='addSchedule', help='Schedules the game')
     async def addSchedule(self, ctx, schedule, game: str):
