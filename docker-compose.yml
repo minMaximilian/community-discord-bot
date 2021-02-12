@@ -4,9 +4,15 @@ services:
     container_name: python_bot
     env_file: ./.env
     build: .
-    links:
-      - mongo
+    networks:
+      - database
   mongo:
     image: mongo
+    container_name: discord_bot_mongo
+    networks:
+      - database
     volumes:
       - ./data:/data/db
+
+networks: 
+  database:

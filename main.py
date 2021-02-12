@@ -3,6 +3,7 @@ import os
 import discord
 from discord.ext import commands
 import host_commands
+from databaseClient import gamesDB
 
 import json
 
@@ -14,6 +15,13 @@ if not(PREFIX):
 
 bot = commands.Bot(command_prefix=commands.when_mentioned_or(PREFIX))
 
+@bot.event
+async def on_guild_join(guild):
+    if gamesDB.find({str(guild.id): {'$exists': True}}).count() > 0: 
+        pass
+    else:
+        payload = {str(guild.id): {}}
+        gamesDB.insert_one(payload)
 
 @bot.event
 async def on_ready():
@@ -24,14 +32,11 @@ async def on_ready():
 # Upgrade to mongodb eventually
 async def start_up():
     for guild in bot.guilds:
-        file_name = str(guild.id) + ".json"
-        
-        data = {
-        }
-
-        if not(os.path.isfile(file_name)):
-            with open(file_name, "w") as f:
-                json.dump(data, f, indent=4)
+        if gamesDB.find({str(guild.id): {'$exists': True}}).count() > 0: 
+            pass
+        else:
+            payload = {str(guild.id): {}}
+            gamesDB.insert_one(payload)
 
 # Adds different command modules to the bot
 bot.add_cog(host_commands.Host(bot))

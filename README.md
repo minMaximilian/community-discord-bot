@@ -6,10 +6,8 @@ To run this bot smoothly with little errors, you require docker. First you need 
 
 `git clone https://github.com/minMaximilian/community-discord-bot`
 
-Then you need to build the image by running this.
+You can proceed to use it by making your `.env` file, you must put `DISCORD_TOKEN=your token goes here` into the .env file.
 
-`docker build . -t {Insert the image name here brackets excluded}`
-
-`docker run -e DISCORD_TOKEN={The bot discord token} {whatever you named the file}`
+To run the bot all you have to do is now run `docker compose up -d`
 
 The bot should be succesfully running. If there is any confusion that arises during these instructions please send an issue and I will try to reclarify more succinctly.

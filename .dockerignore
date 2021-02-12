@@ -1,0 +1,5 @@
+/data
+.gitignore
+.env
+docker-compose.yml
+LICENSE

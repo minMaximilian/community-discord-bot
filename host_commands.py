@@ -1,6 +1,8 @@
 import discord
 
 from discord.ext import commands
+from databaseClient import gamesDB
+
 import json
 
 class Host(commands.Cog):
@@ -47,33 +49,24 @@ class Host(commands.Cog):
     @commands.command(name='addGame', help='Adds the game as a possible candidate for scheduling and registries')
     @commands.is_owner()
     async def addGame(self, ctx, game:str):
-        file_name = str(ctx.guild.id) + ".json"
-        with open(file_name, "r") as f:
-            data = json.load(f)
-        payload =  {
-                'registry': {'players': {}},
-                'schedule': {}
-        }
-        
-        if not(str(game.lower()) in data):
-            with open(file_name, "w") as f:
-                data[str(game.lower())] = payload
-                json.dump(data, f, indent=4)
-                await ctx.reply(f'Succesfully added {game} as a possible candidate for scheduling and registries')
-        else:
+        if gamesDB.find({str(ctx.guild.id) + "." + game.lower(): {'$exists': True}}).count() > 0:
             await ctx.reply(f'{game.capitalize()} already exists as a possible candidate')
+        else:
+            insertion = gamesDB.find_one({str(ctx.guild.id): {'$exists': True}})
+            payload = {
+                    'registry': {'players': {}},
+                    'schedule': {}
+            }   
+            insertion[str(ctx.guild.id)][game.lower()] = payload
+            gamesDB.save(insertion)
+            await ctx.reply(f'Succesfully added {game.capitalize()} as a possible candidate for scheduling and registries')
         
     
     @commands.command(name='removeGame', help='Adds a game to be used within scheduler commands')
     @commands.is_owner()
     async def removeGame(self, ctx, game: str):
-        file_name = str(ctx.guild.id) + ".json"
-        with open(file_name, "r") as f:
-            data = json.load(f)
-        if str(game.lower()) in data:
-            with open(file_name, "w") as f:      
-                data.pop(str(game.lower()))
-                json.dump(data, f, indent=4)
+        if gamesDB.find({str(ctx.guild.id) + "." + game.lower(): {'$exists': True}}).count() > 0:
+                gamesDB.update({}, {'$unset': {str(ctx.guild.id) + "." + game.lower(): {}}})
                 await ctx.reply(f'{game.capitalize()} succesfully removed')
         else:
             await ctx.reply(f'{game.capitalize()} doesn\'t exist')
