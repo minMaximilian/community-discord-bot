@@ -1,7 +1,7 @@
 import discord
 
 from discord.ext import commands
-from databaseClient import gamesDB
+from databaseClient import serversDB
 
 import json
 
@@ -32,36 +32,36 @@ class Host(commands.Cog):
 
     @commands.command(name='register', help='Allows registration for a the ingame tag')
     @commands.guild_only()
-    async def register(self, ctx, tag:str, game:str):
-        file_name = str(ctx.guild.id) + ".json"
-        with open(file_name, "r") as f:
-            data = json.load(f)
-        if str(game.lower()) in data:
-            with open(file_name, "w") as f:
-                data[str(game.lower())]['registry']['players'][str(ctx.author.id)] = tag
-                json.dump(data, f, indent=4)
-                await ctx.reply(f'Succesfully added {tag} to the player {ctx.message.author.mention} to the {game.capitalize()} registry', mention_author=False)
-                if 'embed' in data[str(game.lower())]['registry']:
-                    channel = self.bot.get_channel(int(data[str(game.lower())]['registry']['channel']))
-                    embed = await channel.fetch_message(int(data[str(game.lower())]['registry']['embed']))
-                    await embed.edit(embed=await self.generateEmbed(data, game))
+    async def register(self, ctx, tag:str, game:str):             
+                # if 'embed' in data[str(game.lower())]['registry']:
+                #     channel = self.bot.get_channel(int(data[str(game.lower())]['registry']['channel']))
+                #     embed = await channel.fetch_message(int(data[str(game.lower())]['registry']['embed']))
+                #     await embed.edit(embed=await self.generateEmbed(data, game))
+        if serversDB.find({str(ctx.guild.id) + "." + game.lower(): {'$exists': True}}).count() > 0:
+            insertion = serversDB.find_one({str(ctx.guild.id): {'$exists': True}})
+            payload = {
+                    str(ctx.author.id): tag
+            }   
+            insertion[str(ctx.guild.id)][game.lower()]['registry']['players'] = payload
+            serversDB.save(insertion)
+            await ctx.reply(f'Succesfully added {tag} to the player {ctx.message.author.mention} to the {game.capitalize()} registry', mention_author=False)
         else:
-            await ctx.reply(f'Couldn\'t add the user to the registry, please try correcting the game name')
+            await ctx.reply(f'{game.capitalize()} is not a possible canddiate for registries, try correcting the game name')
             
     @commands.command(name='addGame', help='Adds the game as a possible candidate for scheduling and registries')
     @commands.is_owner()
     @commands.guild_only()
     async def addGame(self, ctx, game:str):
-        if gamesDB.find({str(ctx.guild.id) + "." + game.lower(): {'$exists': True}}).count() > 0:
+        if serversDB.find({str(ctx.guild.id) + "." + game.lower(): {'$exists': True}}).count() > 0:
             await ctx.reply(f'{game.capitalize()} already exists as a possible candidate')
         else:
-            insertion = gamesDB.find_one({str(ctx.guild.id): {'$exists': True}})
+            insertion = serversDB.find_one({str(ctx.guild.id): {'$exists': True}})
             payload = {
                     'registry': {'players': {}},
                     'schedule': {}
             }   
             insertion[str(ctx.guild.id)][game.lower()] = payload
-            gamesDB.save(insertion)
+            serversDB.save(insertion)
             await ctx.reply(f'Succesfully added {game.capitalize()} as a possible candidate for scheduling and registries')
         
     
@@ -69,8 +69,8 @@ class Host(commands.Cog):
     @commands.is_owner()
     @commands.guild_only()
     async def removeGame(self, ctx, game: str):
-        if gamesDB.find({str(ctx.guild.id) + "." + game.lower(): {'$exists': True}}).count() > 0:
-                gamesDB.update({str(ctx.guild.id): {'$exists': True}}, {'$unset': {str(ctx.guild.id) + "." + game.lower(): {}}})
+        if serversDB.find({str(ctx.guild.id) + "." + game.lower(): {'$exists': True}}).count() > 0:
+                serversDB.update({str(ctx.guild.id): {'$exists': True}}, {'$unset': {str(ctx.guild.id) + "." + game.lower(): {}}})
                 await ctx.reply(f'{game.capitalize()} succesfully removed')
         else:
             await ctx.reply(f'{game.capitalize()} doesn\'t exist')

@@ -4,5 +4,5 @@ client = MongoClient(host='discord_bot_mongo', port=27017)
 
 mongoDB = client.discord
 
-gamesDB = mongoDB.games
+serversDB = mongoDB.servers
 usersDB = mongoDB.users
