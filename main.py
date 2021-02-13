@@ -3,6 +3,7 @@ import os
 import discord
 from discord.ext import commands
 import host_commands
+import fun_commands
 from databaseClient import serversDB
 
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -35,5 +36,6 @@ async def start_up():
 
 # Adds different command modules to the bot
 bot.add_cog(host_commands.Host(bot))
+bot.add_cog(fun_commands.Fun(bot))
 
 bot.run(TOKEN)

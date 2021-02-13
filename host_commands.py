@@ -3,22 +3,12 @@ import discord
 from discord.ext import commands
 from databaseClient import serversDB
 
-import json
-
 class Host(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(name='ping', help='Used to test if the bot is functioning, responds with a pong')
-    async def ping(self, ctx):
-        await ctx.reply('pong', mention_author=False)
-
-    @commands.command(name='pong', help='Used to test if the bot is functioning, responds with a pong')
-    async def pong(self, ctx):
-        await ctx.reply('ping', mention_author=False)
-
     @commands.command(name='registry', help='Shows a tabulation of all users registered')
-    @commands.is_owner()
+    @commands.has_guild_permissions(administrator=True)
     @commands.guild_only()
     async def registry(self, ctx, game:str):
         if serversDB.find({f'{ctx.guild.id}.{game.lower()}': {'$exists': True}}).count() > 0:
@@ -43,13 +33,12 @@ class Host(commands.Cog):
             await ctx.reply(f'{game.capitalize()} is not a possible canddiate for registries, try correcting the game name')
             
     @commands.command(name='addGame', help='Adds the game as a possible candidate for scheduling and registries')
-    @commands.is_owner()
+    @commands.has_guild_permissions(administrator=True)
     @commands.guild_only()
     async def addGame(self, ctx, game:str):
         if serversDB.find({f'{ctx.guild.id}.{game.lower()}': {'$exists': True}}).count() > 0:
             await ctx.reply(f'{game.capitalize()} already exists as a possible candidate')
         else:
-            insertion = serversDB.find_one({str(ctx.guild.id): {'$exists': True}})
             payload = {
                     'registry': {'players': {}},
                     'schedule': {}
@@ -59,7 +48,7 @@ class Host(commands.Cog):
         
     
     @commands.command(name='removeGame', help='Adds a game to be used within scheduler commands')
-    @commands.is_owner()
+    @commands.has_guild_permissions(administrator=True)
     @commands.guild_only()
     async def removeGame(self, ctx, game: str):
         if serversDB.find({f'{ctx.guild.id}.{game.lower()}': {'$exists': True}}).count() > 0:
@@ -69,11 +58,13 @@ class Host(commands.Cog):
             await ctx.reply(f'{game.capitalize()} doesn\'t exist')
 
     @commands.command(name='addSchedule', help='Schedules the game')
+    @commands.has_guild_permissions(administrator=True)
     @commands.guild_only()
     async def addSchedule(self, ctx, schedule, game: str):
         await ctx.reply(f'Succesfully scheduled a game @{schedule} for {game.capitalize()}')
 
     @commands.command(name='removeSchedule', help='Removes scheduled item')
+    @commands.has_guild_permissions(administrator=True)
     @commands.guild_only()
     async def removeSchedule(self, ctx, schedule, game: str):
         await ctx.reply(f'Succesfully unscheduled a game @{schedule} for {game.capitalize()}')
@@ -83,4 +74,4 @@ class Host(commands.Cog):
         descriptor = ''
         for key, val in iterable[str(ctx.guild.id)][game.lower()]['registry']['players'].items():
             descriptor += f'<@{key}>: {val}\n'
-        return discord.Embed(title=f"Concurrently {len(iterable)} registered for {game.capitalize()}", description=descriptor)
+        return discord.Embed(title=f"Concurrently {len(iterable.items())} registered for {game.capitalize()}", description=descriptor)
