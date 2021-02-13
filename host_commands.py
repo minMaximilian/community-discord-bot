@@ -75,3 +75,6 @@ class Host(commands.Cog):
         for key, val in iterable[str(ctx.guild.id)][game.lower()]['registry']['players'].items():
             descriptor += f'<@{key}>: {val}\n'
         return discord.Embed(title=f"Concurrently {len(iterable.items())} registered for {game.capitalize()}", description=descriptor)
+
+
+    # Need to add skanderbeg integration down here
