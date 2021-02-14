@@ -71,8 +71,9 @@ class Host(commands.Cog):
 
     async def generateEmbed(self, ctx, game):
         iterable = serversDB.find_one({f'{ctx.guild.id}': {'$exists': True}}, {f'{ctx.guild.id}.{game.lower()}.registry.players': 1})
+        iterable = iterable[str(ctx.guild.id)][game.lower()]['registry']['players']
         descriptor = ''
-        for key, val in iterable[str(ctx.guild.id)][game.lower()]['registry']['players'].items():
+        for key, val in iterable.items():
             descriptor += f'<@{key}>: {val}\n'
         return discord.Embed(title=f"Concurrently {len(iterable.items())} registered for {game.capitalize()}", description=descriptor)
 

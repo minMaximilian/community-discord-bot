@@ -18,21 +18,21 @@ class Fun(commands.Cog):
     @commands.command(name='info', help='Gives user info on their concurrent point status')
     async def info(self, ctx, *args):
         if not(args):
-            response = usersDB.find({f'{ctx.author.id}': {'$exists': True}})
-            if response.count() > 0:
-                pass
-                # display users data in an embed
+            response = usersDB.find_one({f'id': ctx.author.id})
+            if response:
+                await ctx.send(embed= await self.generateEmbed(response))
             else:
-                pass 
+                usersDB.insert_one({'id': ctx.author.id, 'context': {'currency': 100}})
                 # insert a new entry for the user, with his account balance
         else:
             pass
 
-        await ctx.reply('ping', mention_author=False)
-
     async def generateEmbed(self, userData):
-        # generate user embed 
-        pass
+        user = self.bot.get_user(userData['id'])
+        embed = discord.Embed(title=f"Player Card", description=str(userData['id']))
+        # embed.set_image(url=user.avatar_url)
+        return embed
+
 
     @commands.command(name='coinflip', help='Gives user info on their concurrent point status')
     async def coinflip(self, ctx, amount, flip):
