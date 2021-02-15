@@ -2,6 +2,7 @@ import discord
 
 from discord.ext import commands
 from databaseClient import usersDB
+from datetime import date
 
 class Fun(commands.Cog):
     def __init__(self, bot):
@@ -16,23 +17,29 @@ class Fun(commands.Cog):
         await ctx.reply('ping', mention_author=False)
 
     @commands.command(name='info', help='Gives user info on their concurrent point status')
-    async def info(self, ctx, *args):
+    async def info(self, ctx, *args: discord.Member):
         if not(args):
-            response = usersDB.find_one({f'id': ctx.author.id})
-            if response:
-                await ctx.send(embed= await self.generateEmbed(response))
-            else:
-                usersDB.insert_one({'id': ctx.author.id, 'context': {'currency': 100}})
-                # insert a new entry for the user, with his account balance
+            response = usersDB.find_one({'id': ctx.author.id})
+            if not(response):
+                self.generateProfile(ctx.author.id)
+                response = usersDB.find_one({f'id': ctx.author.id})
+            await ctx.send(embed= await self.generateEmbed(response))
         else:
-            pass
+            query = usersDB.find({'id': {'$in': [i.id for i in args]}})
+            for i in query:
+                await ctx.send(embed= await self.generateEmbed(i))
 
     async def generateEmbed(self, userData):
-        user = self.bot.get_user(userData['id'])
-        embed = discord.Embed(title=f"Player Card", description=str(userData['id']))
-        # embed.set_image(url=user.avatar_url)
+        user = await self.bot.fetch_user(userData['id'])
+        embed = discord.Embed(title='Player Profile', description=f'The user profile of <@{user.id}>')
+        embed.set_thumbnail(url=user.avatar_url)
+        embed.add_field(name='Points', value=userData['context']['currency'])
+        embed.add_field(name='Warnings', value=len(userData['context']['moderation']['warnings']))
+        embed.set_footer(text=str(date.today()))
         return embed
 
+    def generateProfile(self, id):
+        usersDB.insert_one({'id': id, 'context': {'currency': 100, 'moderation': {'bans': 0, 'warnings': {}}}})
 
     @commands.command(name='coinflip', help='Gives user info on their concurrent point status')
     async def coinflip(self, ctx, amount, flip):
