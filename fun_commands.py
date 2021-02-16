@@ -66,18 +66,50 @@ class Fun(commands.Cog):
         pass
     
     @commands.command(name='warn', help='Usage, command @user \"Reason within these quotations\", kicks the user after 3 strikes')
-    @commands.has_guild_permissions(administrator=True)
+    @commands.has_guild_permissions(kick_members=True)
     @commands.guild_only()
     async def warn(self, ctx, person: discord.Member, reason=None):
         payload = {'warning': reason if reason else 'No reason provided', 'date': str(date.today()), 'timestamp': str(time.time())}
         response = usersDB.find_one({'id': person.id})
         if response:
-            usersDB.update_one({'id': person.id}, {'$push': {f'context.moderation.warnings.{ctx.guild.id}': payload}}, upsert=True)
             if len(response['context']['moderation']['warnings'][str(ctx.guild.id)]) + 1 >= 3:
+                usersDB.update_one({'id': person.id}, {'$push': {f'context.moderation.warnings.{ctx.guild.id}': payload}, '$inc': {f'context.moderation.kicked': 1}}, upsert=True)
                 await person.kick(reason='Kicked for exceeding 3 warning limit')
                 await ctx.reply(f'Succesfully kicked {person.name} for exceding 3 warning limit')
+            else:
+                usersDB.update_one({'id': person.id}, {'$push': {f'context.moderation.warnings.{ctx.guild.id}': payload}}, upsert=True)
             await ctx.reply(f'Succesfully warned {person.name} for Reason: \"{reason}\"')
         else:
             self.generateProfile(person.id)
             usersDB.update_one({'id': person.id}, {'$push': {f'context.moderation.warnings.{ctx.guild.id}': payload}}, upsert=True)
             await ctx.reply(f'Succesfully warned {person.name} for {reason}')
+
+    @commands.command(name='kick', help='Usage, command @user \"Reason within these quotations\"')
+    @commands.has_guild_permissions(kick_members=True)
+    @commands.guild_only()
+    async def kick(self, ctx, person: discord.Member, reason=None):
+        response = usersDB.find_one({'id': person.id})
+        if response:
+            usersDB.update_one({'id': person.id}, {'$inc': {f'context.moderation.kicked': 1}}, upsert=True)
+            await person.kick(reason=(reason if reason else 'No reason'))
+            await ctx.reply(f'Succesfully kicked {person.name} for Reason: {reason}')
+        else:
+            self.generateProfile(person.id)
+            usersDB.update_one({'id': person.id}, {'$inc': {f'context.moderation.kicked': 1}}, upsert=True)
+            await person.kick(reason=(reason if reason else 'No reason'))
+            await ctx.reply(f'Succesfully kicked {person.name} for Reason: {reason}')
+
+    @commands.command(name='ban', help='Usage, command @user \"Reason within these quotations\"')
+    @commands.has_guild_permissions(ban_members=True)
+    @commands.guild_only()
+    async def ban(self, ctx, person: discord.Member, reason=None):
+        response = usersDB.find_one({'id': person.id})
+        if response:
+            usersDB.update_one({'id': person.id}, {'$inc': {f'context.moderation.bans': 1}}, upsert=True)
+            await person.ban(reason=(reason if reason else 'No reason'))
+            await ctx.reply(f'Succesfully banned {person.name} for Reason: {reason}')
+        else:
+            self.generateProfile(person.id)
+            usersDB.update_one({'id': person.id}, {'$inc': {f'context.moderation.bans': 1}}, upsert=True)
+            await person.ban(reason=(reason if reason else 'No reason'))
+            await ctx.reply(f'Succesfully banned {person.name} for Reason: {reason}')
