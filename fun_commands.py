@@ -25,15 +25,15 @@ class Fun(commands.Cog):
             if not(response):
                 self.generateProfile(ctx.author.id)
                 response = usersDB.find_one({f'id': ctx.author.id})
-            await ctx.send(embed= await self.generateEmbed(response))
+            await ctx.send(embed= await self.generateInfoEmbed(response))
         elif len(args) < 6:
             query = usersDB.find({'id': {'$in': [i.id for i in args]}})
             for i in query:
-                await ctx.send(embed= await self.generateEmbed(i))
+                await ctx.send(embed= await self.generateInfoEmbed(i))
         else:
             await ctx.reply(f'Can only check up to a maximum of 5 profiles')
 
-    async def generateEmbed(self, userData):
+    async def generateInfoEmbed(self, userData):
         user = await self.bot.fetch_user(userData['id'])
         embed = discord.Embed(title='Player Profile', description=f'The user profile of <@{user.id}>')
         embed.set_thumbnail(url=user.avatar_url)
@@ -69,7 +69,7 @@ class Fun(commands.Cog):
     @commands.has_guild_permissions(kick_members=True)
     @commands.guild_only()
     async def warn(self, ctx, person: discord.Member, reason=None):
-        payload = {'warning': reason if reason else 'No reason provided', 'date': str(date.today()), 'timestamp': str(time.time())}
+        payload = {'warning': reason if reason else 'No reason provided', 'date': str(date.today()), 'timestamp': int(time.time())}
         response = usersDB.find_one({'id': person.id})
         if response:
             if len(response['context']['moderation']['warnings'][str(ctx.guild.id)]) + 1 >= 3:
@@ -113,3 +113,28 @@ class Fun(commands.Cog):
             usersDB.update_one({'id': person.id}, {'$inc': {f'context.moderation.bans': 1}}, upsert=True)
             await person.ban(reason=(reason if reason else 'No reason'))
             await ctx.reply(f'Succesfully banned {person.name} for Reason: {reason}')
+
+    @commands.command(name='logs', help='Usage, command @user or multiple users, under 5, returns logs of a given player and all the warnings they attained in the server')
+    @commands.has_guild_permissions(ban_members=True)
+    @commands.guild_only()
+    async def logs(self, ctx, *args: discord.Member):
+        if len(args) < 6:
+            query = usersDB.find({'$and': [{'id': {'$in': [i.id for i in args]}}, {f'context.moderation.warnings.{ctx.guild.id}': {'$exists': True}}]})
+            for i in query:
+                await ctx.send(embed= await self.generateLogsEmbed(i, ctx.guild.id))
+        else:
+            await ctx.reply(f'Can only check up to a maximum of 5 profiles')
+
+
+
+    async def generateLogsEmbed(self, userData, id):
+        user = await self.bot.fetch_user(userData['id'])
+        embed = discord.Embed(title='Log Profile', description=f'The logs of <@{user.id}>')
+        embed.set_thumbnail(url=user.avatar_url)
+        for i in userData['context']['moderation']['warnings'][str(id)]:
+            warning = i['warning']
+            dateEmbed = i['date']
+            ID = i['timestamp']
+            embed.add_field(name=f'Warning ID: {ID}', value=f'{warning} \n Received at:\n {dateEmbed}', inline=True)
+        embed.set_footer(text=str(date.today()))
+        return embed
