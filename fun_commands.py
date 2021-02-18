@@ -63,12 +63,15 @@ class Fun(commands.Cog):
     @commands.command(name='coinflip', help='Gives user info on their concurrent point status')
     async def coinflip(self, ctx, amount: int):
         enoughCurrency = self.enoughCurrency(ctx.author.id, amount)
-        if random.choice([True, False]) and enoughCurrency:
-            usersDB.update_one({'id': ctx.author.id}, {'$inc': {'context.currency': amount}})
-            await ctx.reply(f'You just won {amount}')
+        if enoughCurrency:
+            if random.choice([True, False]):
+                usersDB.update_one({'id': ctx.author.id}, {'$inc': {'context.currency': amount}})
+                await ctx.reply(f'You just won {amount}')
+            else:
+                usersDB.update_one({'id': ctx.author.id}, {'$inc': {'context.currency': -amount}})
+                await ctx.reply(f'You just lost {amount}')
         else:
-            usersDB.update_one({'id': ctx.author.id}, {'$inc': {'context.currency': -amount}})
-            await ctx.reply(f'You just lost {amount}')
+            await ctx.reply(f'You don\'t have enough currency to gamble with')
 
     @commands.command(name='leaderboard', help='Shows the global leaderboard')
     async def leaderboard(self, ctx):
