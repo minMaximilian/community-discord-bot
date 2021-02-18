@@ -1,4 +1,5 @@
 import discord
+import random
 
 from discord.ext import commands
 from databaseClient import usersDB
@@ -42,13 +43,32 @@ class Fun(commands.Cog):
         embed.set_footer(text=str(date.today()))
         return embed
 
-    def generateProfile(self, id):
-        usersDB.insert_one({'id': id, 'context': {'currency': 100, 'moderation': {'bans': 0, 'kicked': 0, 'warnings': {}}}})
+    def generateProfile(self, userID):
+        usersDB.insert_one({'id': userID, 'context': {'currency': 100, 'moderation': {'bans': 0, 'kicked': 0, 'warnings': {}}}})
+
+    def enoughCurrency(self, userID, amount):
+        result = usersDB.find_one({'id': userID})
+        if result:
+            if result['context']['currency'] - amount >= 0:
+                return True
+            else:
+                return False
+        else:
+            self.generateProfile(userID)
+            if 100 - amount >= 0:
+                return True
+            else:
+                return False
 
     @commands.command(name='coinflip', help='Gives user info on their concurrent point status')
-    async def coinflip(self, ctx, amount, flip):
-        # coin flip gambling for virtual currency
-        pass
+    async def coinflip(self, ctx, amount: int):
+        enoughCurrency = self.enoughCurrency(ctx.author.id, amount)
+        if random.choice([True, False]) and enoughCurrency:
+            usersDB.update_one({'id': ctx.author.id}, {'$inc': {'context.currency': amount}})
+            await ctx.reply(f'You just won {amount}')
+        else:
+            usersDB.update_one({'id': ctx.author.id}, {'$inc': {'context.currency': -amount}})
+            await ctx.reply(f'You just lost {amount}')
 
     @commands.command(name='leaderboard', help='Shows the global leaderboard')
     async def leaderboard(self, ctx):
@@ -125,16 +145,14 @@ class Fun(commands.Cog):
         else:
             await ctx.reply(f'Can only check up to a maximum of 5 profiles')
 
-
-
-    async def generateLogsEmbed(self, userData, id):
+    async def generateLogsEmbed(self, userData, guildID):
         user = await self.bot.fetch_user(userData['id'])
         embed = discord.Embed(title='Log Profile', description=f'The logs of <@{user.id}>')
         embed.set_thumbnail(url=user.avatar_url)
-        for i in userData['context']['moderation']['warnings'][str(id)]:
+        for i in userData['context']['moderation']['warnings'][str(guildID)]:
             warning = i['warning']
             dateEmbed = i['date']
-            ID = i['timestamp']
-            embed.add_field(name=f'Warning ID: {ID}', value=f'{warning} \n Received at:\n {dateEmbed}', inline=True)
+            userID = i['timestamp']
+            embed.add_field(name=f'Warning ID: {userID}', value=f'{warning} \n Received at:\n {dateEmbed}', inline=True)
         embed.set_footer(text=str(date.today()))
         return embed
