@@ -80,9 +80,15 @@ class Fun(commands.Cog):
         pass
 
     @commands.command(name='donate', help='Donates points to another user')
-    async def donate(self, ctx, receiver):
-        # donation
-        pass
+    async def donate(self, ctx, amount: int, person: discord.Member):
+        absAmount = abs(amount)
+        enoughCurrency = self.enoughCurrency(ctx.author.id, absAmount)
+        if enoughCurrency:
+            usersDB.update_one({'id': person.id}, {'$inc': {'context.currency': absAmount}})
+            usersDB.update_one({'id': ctx.author.id}, {'$inc': {'context.currency': -absAmount}})
+            await ctx.reply(f'Succesful transfer of {absAmount} to {person.name}')
+        else:
+            await ctx.reply(f'You don\'t have enough currency to donate with')
 
     @commands.command(name='slots', help='Allows the user to play slots')
     async def slots(self, ctx, receiver):
