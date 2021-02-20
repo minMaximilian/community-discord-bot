@@ -76,10 +76,26 @@ class Fun(commands.Cog):
 
     @commands.command(name='leaderboard', help='Shows the global leaderboard')
     async def leaderboard(self, ctx):
-        # top 10 leaderboard
-        pass
+        leaderboard = usersDB.find().sort('context.currency', -1)
+        numerator = 1
+        embed = discord.Embed(title='Leaderboard')
+        board = ''
+        for i in leaderboard:
+            if numerator <= 10:
+                user = await self.bot.fetch_user(i['id'])
+                currency = i['context']['currency']
+                board += f'**{numerator}. {user.name}**\n *{currency}*\n\n'
+            elif i['id'] == ctx.author.id:
+                currency = i['context']['currency']
+                board += f'**{numerator}. {ctx.author.name}**\n *{currency}*\n'      
+            numerator += 1
+        embed.description=board
+        await ctx.send(embed=embed)
+
+
 
     @commands.command(name='donate', help='Donates points to another user')
+    @commands.guild_only()
     async def donate(self, ctx, amount: int, person: discord.Member):
         absAmount = abs(amount)
         enoughCurrency = self.enoughCurrency(ctx.author.id, absAmount)
