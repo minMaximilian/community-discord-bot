@@ -173,12 +173,14 @@ class Fun(commands.Cog):
 
     async def generateLogsEmbed(self, userData, guildID):
         user = await self.bot.fetch_user(userData['id'])
-        embed = discord.Embed(title='Log Profile', description=f'The logs of <@{user.id}>')
+        descriptor = f'The logs of <@{user.id}>\n\n'
+        embed = discord.Embed(title='Log Profile')
         embed.set_thumbnail(url=user.avatar_url)
         for i in userData['context']['moderation']['warnings'][str(guildID)]:
             warning = i['warning']
             dateEmbed = i['date']
-            userID = i['timestamp']
-            embed.add_field(name=f'Warning ID: {userID}', value=f'{warning} \n Received at:\n {dateEmbed}', inline=True)
-        embed.set_footer(text=str(date.today()))
+            warningID = i['timestamp']
+            descriptor += f'**Warning ID: {warningID} ** \n {warning} \n Received at: \n *{dateEmbed}*\n'
+        embed.set_footer(text=f'Log created on: {str(date.today())}')
+        embed.description=descriptor
         return embed
