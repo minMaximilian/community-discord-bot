@@ -43,7 +43,7 @@ class Mod(commands.Cog):
             helperfunc.generateProfile(person.id)
             usersDB.update_one({'id': person.id}, {'$push': {f'context.moderation.{insertType}.{ctx.guild.id}': payload}}, upsert=True)
 
-    @commands.command(name='logs', help='Usage, command @user or multiple users, under 5, returns logs of a given player and all the warnings they attained in the server')
+    @commands.command(name='logs', help='Usage, command TypeOfLogs(warnings|kicks|bans) @user or multiple users, under 5, returns logs of a given player and all the warnings they attained in the server')
     @commands.has_guild_permissions(kick_members=True)
     @commands.guild_only()
     async def logs(self, ctx, logType: str, *args: discord.Member):

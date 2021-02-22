@@ -40,7 +40,8 @@ class Fun(commands.Cog):
         embed = discord.Embed(title='Player Profile', description=f'The user profile of <@{user.id}>')
         embed.set_thumbnail(url=user.avatar_url)
         embed.add_field(name='Points', value=userData['context']['currency'])
-        embed.add_field(name='Warnings', value=len(userData['context']['moderation']['warnings'][str(ctx.guild.id)]))
+        if str(ctx.guild.id) in userData['context']['moderation']['warnings']:
+            embed.add_field(name='Warnings', value=len(userData['context']['moderation']['warnings'][str(ctx.guild.id)]))
         embed.set_footer(text=str(date.today()))
         return embed
 
