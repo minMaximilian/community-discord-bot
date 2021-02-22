@@ -15,9 +15,7 @@ class Mod(commands.Cog):
     @commands.has_guild_permissions(kick_members=True)
     @commands.guild_only()
     async def warn(self, ctx, person: discord.Member, reason=None):
-        warnings = self.insertReason(ctx, person, reason, 'warnings')
-        if warnings % 3 == 0:
-            await person.kick(reason=(reason if reason else 'No reason'))
+        self.insertReason(ctx, person, reason, 'warnings')
         await ctx.reply(f'Succesfully warned {person.name} for {reason}')
 
     @commands.command(name='kick', help='Usage, command @user \"Reason within these quotations\"')
@@ -45,12 +43,10 @@ class Mod(commands.Cog):
             helperfunc.generateProfile(person.id)
             usersDB.update_one({'id': person.id}, {'$push': {f'context.moderation.{insertType}.{ctx.guild.id}': payload}}, upsert=True)
 
-        return len(response['context']['moderation']['warnings'][str(ctx.guild.id)]) + 1
-
     @commands.command(name='logs', help='Usage, command @user or multiple users, under 5, returns logs of a given player and all the warnings they attained in the server')
     @commands.has_guild_permissions(kick_members=True)
     @commands.guild_only()
-    async def logs(self, ctx, logType: str,*args: discord.Member):
+    async def logs(self, ctx, logType: str, *args: discord.Member):
         if len(args) < 6:
             query = usersDB.find({'$and': [{'id': {'$in': [i.id for i in args]}}, {f'context.moderation.{logType}.{ctx.guild.id}': {'$exists': True}}]})
             for i in query:
