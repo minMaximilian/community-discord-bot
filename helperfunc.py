@@ -1,7 +1,7 @@
 from databaseClient import usersDB
 
 def generateProfile(userID):
-        usersDB.insert_one({'id': userID, 'context': {'currency': 100, 'moderation': {'bans': 0, 'kicked': 0, 'warnings': {}}}})
+        usersDB.insert_one({'id': userID, 'context': {'currency': 100, 'moderation': {'bans': {}, 'kicks': {}, 'warnings': {}}}})
 
 def enoughCurrency(userID, amount):
     result = usersDB.find_one({'id': userID})

@@ -27,20 +27,20 @@ class Fun(commands.Cog):
             if not(response):
                 helperfunc.generateProfile(ctx.author.id)
                 response = usersDB.find_one({f'id': ctx.author.id})
-            await ctx.send(embed= await self.generateInfoEmbed(response))
+            await ctx.send(embed= await self.generateInfoEmbed(response, ctx))
         elif len(args) < 6:
             query = usersDB.find({'id': {'$in': [i.id for i in args]}})
             for i in query:
-                await ctx.send(embed= await self.generateInfoEmbed(i))
+                await ctx.send(embed= await self.generateInfoEmbed(i, ctx))
         else:
             await ctx.reply(f'Can only check up to a maximum of 5 profiles')
 
-    async def generateInfoEmbed(self, userData):
+    async def generateInfoEmbed(self, userData, ctx):
         user = await self.bot.fetch_user(userData['id'])
         embed = discord.Embed(title='Player Profile', description=f'The user profile of <@{user.id}>')
         embed.set_thumbnail(url=user.avatar_url)
         embed.add_field(name='Points', value=userData['context']['currency'])
-        embed.add_field(name='Warnings', value=len(userData['context']['moderation']['warnings']))
+        embed.add_field(name='Warnings', value=len(userData['context']['moderation']['warnings'][str(ctx.guild.id)]))
         embed.set_footer(text=str(date.today()))
         return embed
 

@@ -74,7 +74,7 @@ class Host(commands.Cog):
         iterable = iterable[str(ctx.guild.id)][game.lower()]['registry']['players']
         descriptor = ''
         for key, val in iterable.items():
-            descriptor += f'<@{key}>: {val}\n'
+            descriptor += f'<@{key}>: \n *{val}*\n\n'
         return discord.Embed(title=f"Concurrently {len(iterable.items())} registered for {game.capitalize()}", description=descriptor)
 
 
