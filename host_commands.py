@@ -1,4 +1,5 @@
 import discord
+import datetime
 
 from discord.ext import commands
 from databaseClient import serversDB
@@ -57,11 +58,19 @@ class Host(commands.Cog):
         else:
             await ctx.reply(f'{game.capitalize()} doesn\'t exist')
 
-    @commands.command(name='addSchedule', help='Schedules the game')
+    @commands.command(name='addSchedule', help='Schedules the games the game, command format "?addSchedule "Year-Month-Day Hour-Minute" GameName Repeat(True|False)", the bot figures out the day and repeats the schedule, unless repeat is False, on by default')
     @commands.has_guild_permissions(administrator=True)
     @commands.guild_only()
-    async def addSchedule(self, ctx, schedule, game: str):
-        await ctx.reply(f'Succesfully scheduled a game @{schedule} for {game.capitalize()}')
+    async def addSchedule(self, ctx, schedule, game: str, repeat: bool = True):
+        response = serversDB.find_one({f'{ctx.guild.id}.{game.lower()}': {'$exists': True}})
+        if response:
+            scheduledObj = datetime.datetime.strptime(schedule, '%Y-%m-%d %H:%M')
+            if scheduledObj > datetime.datetime.now():
+                await ctx.reply(f'Succesfully scheduled a game for {game.capitalize()} at {schedule}')
+            else:
+                await ctx.reply(f'The programmer is a dummy and can\'t and doesn\'t want to program user proof commands so please make sure the date scheduled is actually in the future')
+        else:
+            await ctx.reply(f'{game.capitalize()} doesn\'t exist as a possible candidate for scheduling and registries')
 
     @commands.command(name='removeSchedule', help='Removes scheduled item')
     @commands.has_guild_permissions(administrator=True)
