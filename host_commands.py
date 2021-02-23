@@ -1,5 +1,6 @@
 import discord
 import datetime
+import time
 
 from discord.ext import commands
 from databaseClient import serversDB
@@ -42,7 +43,7 @@ class Host(commands.Cog):
         else:
             payload = {
                     'registry': {'players': {}},
-                    'schedule': {}
+                    'schedule': []
             }   
             serversDB.update({str(ctx.guild.id): {'$exists': True}}, {'$set': {f'{ctx.guild.id}.{game.lower()}': payload}}, upsert=True)
             await ctx.reply(f'Succesfully added {game.capitalize()} as a possible candidate for scheduling and registries')
@@ -66,6 +67,8 @@ class Host(commands.Cog):
         if response:
             scheduledObj = datetime.datetime.strptime(schedule, '%Y-%m-%d %H:%M')
             if scheduledObj > datetime.datetime.now():
+                payload = {'datetime': scheduledObj, 'timestamp': int(time.time()), 'repeat': repeat}        
+                serversDB.update_one({f'{ctx.guild.id}.{game.lower()}': {'$exists': True}}, {'$push': {f'{ctx.guild.id}.{game.lower()}.schedule': payload}}, upsert=True)
                 await ctx.reply(f'Succesfully scheduled a game for {game.capitalize()} at {schedule}')
             else:
                 await ctx.reply(f'The programmer is a dummy and can\'t and doesn\'t want to program user proof commands so please make sure the date scheduled is actually in the future')
