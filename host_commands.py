@@ -1,6 +1,7 @@
 import discord
 import datetime
 import time
+import calendar
 
 from discord.ext import commands
 from databaseClient import serversDB
@@ -78,8 +79,30 @@ class Host(commands.Cog):
     @commands.command(name='removeSchedule', help='Removes scheduled item')
     @commands.has_guild_permissions(administrator=True)
     @commands.guild_only()
-    async def removeSchedule(self, ctx, schedule, game: str):
-        await ctx.reply(f'Succesfully unscheduled a game @{schedule} for {game.capitalize()}')
+    async def removeSchedule(self, ctx, timestamp, game: str):
+        await ctx.reply(f'Succesfully unscheduled a game @{timestamp} for {game.capitalize()}')
+
+    @commands.command(name='showSchedule', help='Removes scheduled item')
+    @commands.has_guild_permissions(administrator=True)
+    @commands.guild_only()
+    async def showSchedule(self, ctx, game: str):
+        data = serversDB.find_one({f'{ctx.guild.id}.{game.lower()}': {'$exists': True}})
+        if data:
+            await ctx.send(embed= await self.generateSchedules(data, ctx.guild.id, game.lower()))
+        else:
+            await ctx.reply(f'{game.capitalize()} is not a possible canddiate for registries, try correcting the game name')
+
+    async def generateSchedules(self, data, guildID, game):
+        descriptor = ''
+        for i in data[str(guildID)][game]['schedule']:
+            ID = i['timestamp']
+            date = i['datetime']
+            calendar_day = calendar.day_name[date.weekday()]
+            if i['repeat']:
+                descriptor += f'**ID: {ID}** \n Every *{calendar_day}* at {date.time()}\n\n'
+            else:
+                descriptor += f'**ID: {ID}** \n Scheduled for {date}\n\n'
+        return discord.Embed(title=f'Scheduled games for {game.capitalize()}', description=descriptor)
 
     async def generateEmbed(self, ctx, game):
         iterable = serversDB.find_one({f'{ctx.guild.id}': {'$exists': True}}, {f'{ctx.guild.id}.{game.lower()}.registry.players': 1})
@@ -87,7 +110,7 @@ class Host(commands.Cog):
         descriptor = ''
         for key, val in iterable.items():
             descriptor += f'<@{key}>: \n *{val}*\n\n'
-        return discord.Embed(title=f"Concurrently {len(iterable.items())} registered for {game.capitalize()}", description=descriptor)
+        return discord.Embed(title=f'Concurrently {len(iterable.items())} registered for {game.capitalize()}', description=descriptor)
 
 
     # Need to add skanderbeg integration down here
