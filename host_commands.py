@@ -79,8 +79,13 @@ class Host(commands.Cog):
     @commands.command(name='removeSchedule', help='Removes scheduled item')
     @commands.has_guild_permissions(administrator=True)
     @commands.guild_only()
-    async def removeSchedule(self, ctx, timestamp, game: str):
-        await ctx.reply(f'Succesfully unscheduled a game @{timestamp} for {game.capitalize()}')
+    async def removeSchedule(self, ctx, timestamp:int, game: str):
+        response = serversDB.find_one({f'{ctx.guild.id}.{game.lower()}': {'$exists': True}})
+        if response:
+            serversDB.update_one({f'{ctx.guild.id}.{game.lower()}': {'$exists': True}}, {'$pull': {f'{ctx.guild.id}.{game.lower()}.schedule': {'timestamp': timestamp}}})
+            await ctx.reply(f'Succesfully unscheduled a game @{timestamp} for {game.capitalize()}')
+        else:
+            await ctx.reply(f'{game.capitalize()} is not a possible canddiate for registries, try correcting the game name')
 
     @commands.command(name='showSchedule', help='Removes scheduled item')
     @commands.has_guild_permissions(administrator=True)
