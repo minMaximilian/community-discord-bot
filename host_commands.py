@@ -117,5 +117,4 @@ class Host(commands.Cog):
             descriptor += f'<@{key}>: \n *{val}*\n\n'
         return discord.Embed(title=f'Concurrently {len(iterable.items())} registered for {game.capitalize()}', description=descriptor)
 
-
     # Need to add skanderbeg integration down here

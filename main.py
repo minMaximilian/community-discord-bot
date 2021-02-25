@@ -6,6 +6,7 @@ import host_commands
 import fun_commands
 import mod_commands
 from databaseClient import serversDB
+import scheduling
 
 TOKEN = os.getenv('DISCORD_TOKEN')
 PREFIX = os.getenv('DISCORD_PREFIX')
@@ -26,6 +27,7 @@ async def on_guild_join(guild):
 @bot.event
 async def on_ready():
     await start_up()
+    await load_scheduler()
 
 async def start_up():
     for guild in bot.guilds:
@@ -34,6 +36,15 @@ async def start_up():
         else:
             payload = {str(guild.id): {}}
             serversDB.insert_one(payload)
+
+async def load_scheduler():
+    x = serversDB.find()
+    for l in x:
+        for _, i in l.items():
+            if isinstance(i, dict):
+                for game, k in i.items():
+                    for schedule in k['schedule']:
+                        scheduling.schedule(schedule, game, list(l.keys())[1])
 
 # Adds different command modules to the bot
 bot.add_cog(host_commands.Host(bot))
