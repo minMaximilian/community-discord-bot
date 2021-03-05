@@ -5,6 +5,7 @@ from discord.ext import commands
 import host_commands
 import fun_commands
 import mod_commands
+import help_command
 from databaseClient import serversDB
 import scheduling
 
@@ -47,8 +48,9 @@ async def load_scheduler():
                         scheduling.schedule(schedule, game, list(l.keys())[1])
 
 # Adds different command modules to the bot
+bot.remove_command('help')
 bot.add_cog(host_commands.Host(bot))
 bot.add_cog(fun_commands.Fun(bot))
 bot.add_cog(mod_commands.Mod(bot))
-
+bot.add_cog(help_command.Help(bot))
 bot.run(TOKEN)
