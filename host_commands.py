@@ -71,7 +71,7 @@ class Host(commands.Cog):
             if scheduledObj > datetime.datetime.now():
                 payload = {'datetime': scheduledObj, 'timestamp': int(time.time()), 'repeat': repeat}        
                 serversDB.update_one({f'{ctx.guild.id}.{game.lower()}': {'$exists': True}}, {'$push': {f'{ctx.guild.id}.{game.lower()}.schedule': payload}}, upsert=True)
-                scheduling.schedule(payload, game, ctx.guild.id)
+                await scheduling.schedule(payload, game, ctx.guild.id, self.bot)
                 await ctx.reply(f'Succesfully scheduled a game for {game.capitalize()} at {schedule}')
             else:
                 await ctx.reply(f'The programmer is a dummy and can\'t and doesn\'t want to program user proof commands so please make sure the date scheduled is actually in the future')

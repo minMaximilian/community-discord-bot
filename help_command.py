@@ -8,5 +8,8 @@ class Help(commands.Cog):
 
     @commands.command(name='help', help='Shows the help command')
     async def help(self, ctx):
+        descriptor = ''
         for cog in self.bot.cogs:
-            print(self.bot.cogs[cog].__doc__)
+            descriptor += self.bot.cogs[cog].__doc__
+
+        await ctx.send(descriptor)

@@ -45,7 +45,7 @@ async def load_scheduler():
             if isinstance(i, dict):
                 for game, k in i.items():
                     for schedule in k['schedule']:
-                        scheduling.schedule(schedule, game, list(l.keys())[1])
+                        await scheduling.schedule(schedule, game, list(l.keys())[1], bot)
 
 # Adds different command modules to the bot
 bot.remove_command('help')
