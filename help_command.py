@@ -10,6 +10,8 @@ class Help(commands.Cog):
     async def help(self, ctx):
         descriptor = ''
         for cog in self.bot.cogs:
-            descriptor += self.bot.cogs[cog].__doc__
+            descriptor += f'***{cog}***\n'
+            for command in self.bot.get_cog(cog).get_commands():
+                descriptor += f'**COMMAND:** {command.name},\n*{command.help}*\n\n'
 
-        await ctx.send(descriptor)
+        await ctx.send(embed=discord.Embed(title='Help', description=descriptor))
