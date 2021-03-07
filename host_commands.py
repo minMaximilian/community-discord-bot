@@ -37,7 +37,7 @@ class Host(commands.Cog):
             if queryResult[str(ctx.guild.id)][game.lower()]['role']:
                 user = ctx.message.author
                 role = ctx.guild.get_role(queryResult[str(ctx.guild.id)][game.lower()]['role'])
-                await user.add_roles(role)
+                await   user.add_roles(role)
         else:
             await ctx.reply(f'{game.capitalize()} is not a possible canddiate for registries, try correcting the game name')
             
@@ -97,7 +97,7 @@ class Host(commands.Cog):
         else:
             await ctx.reply(f'{game.capitalize()} is not a possible canddiate for registries, try correcting the game name')
 
-    @commands.command(name='showSchedule', help='Removes scheduled item')
+    @commands.command(name='showSchedule', help='Shows scheduled items')
     @commands.has_guild_permissions(administrator=True)
     @commands.guild_only()
     async def showSchedule(self, ctx, game: str):
