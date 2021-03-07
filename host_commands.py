@@ -25,7 +25,8 @@ class Host(commands.Cog):
     @commands.command(name='register', help='Allows registration for a the ingame tag')
     @commands.guild_only()
     async def register(self, ctx, tag:str, game:str):
-        if serversDB.find({f'{ctx.guild.id}.{game.lower()}': {'$exists': True}}).count() > 0:
+        queryResult = serversDB.find_one({f'{ctx.guild.id}.{game.lower()}': {'$exists': True}}) 
+        if queryResult:
             serversDB.update({str(ctx.guild.id): {'$exists': True}}, {'$set': {f'{ctx.guild.id}.{game.lower()}.registry.players.{ctx.author.id}': tag}}, upsert=True)
             await ctx.reply(f'Succesfully added {tag} to the player {ctx.message.author.mention} to the {game.capitalize()} registry', mention_author=False)
             if serversDB.find({f'{ctx.guild.id}.{game.lower()}.registry.embed': {'$exists': True}}).count() > 0:
@@ -33,20 +34,27 @@ class Host(commands.Cog):
                 channel = self.bot.get_channel(int(data[str(ctx.guild.id)][game.lower()]['registry']['channel']))
                 embed = await channel.fetch_message(int(data[str(ctx.guild.id)][game.lower()]['registry']['embed']))
                 await embed.edit(embed=await self.generateEmbed(ctx, game))
+            if queryResult[str(ctx.guild.id)][game.lower()]['role']:
+                user = ctx.message.author
+                role = ctx.guild.get_role(queryResult[str(ctx.guild.id)][game.lower()]['role'])
+                await user.add_roles(role)
         else:
             await ctx.reply(f'{game.capitalize()} is not a possible canddiate for registries, try correcting the game name')
             
     @commands.command(name='addGame', help='Adds the game as a possible candidate for scheduling and registries')
     @commands.has_guild_permissions(administrator=True)
     @commands.guild_only()
-    async def addGame(self, ctx, game:str):
+    async def addGame(self, ctx, game:str, role: discord.Role = None):
         if serversDB.find({f'{ctx.guild.id}.{game.lower()}': {'$exists': True}}).count() > 0:
             await ctx.reply(f'{game.capitalize()} already exists as a possible candidate')
         else:
             payload = {
                     'registry': {'players': {}},
-                    'schedule': []
-            }   
+                    'schedule': [],
+            }
+            if role:
+                payload['role'] = role.id
+
             serversDB.update({str(ctx.guild.id): {'$exists': True}}, {'$set': {f'{ctx.guild.id}.{game.lower()}': payload}}, upsert=True)
             await ctx.reply(f'Succesfully added {game.capitalize()} as a possible candidate for scheduling and registries')
         
