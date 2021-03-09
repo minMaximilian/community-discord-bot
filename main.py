@@ -15,7 +15,9 @@ PREFIX = os.getenv('DISCORD_PREFIX')
 if not(PREFIX):
     PREFIX="?"
 
-bot = commands.Bot(command_prefix=commands.when_mentioned_or(PREFIX))
+intents = discord.Intents.default()
+intents.members = True
+bot = commands.Bot(command_prefix=commands.when_mentioned_or(PREFIX), intents=intents)
 
 @bot.event
 async def on_guild_join(guild):

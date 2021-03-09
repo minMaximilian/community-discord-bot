@@ -40,7 +40,7 @@ class Host(commands.Cog):
         else:
             await ctx.reply(f'{game.capitalize()} is not a possible candidate for registries, try correcting the game name')
 
-    @commands.command(name='deregister', help='Allows registration for a the ingame tag')
+    @commands.command(name='deregister', help='Allows deregistration from a game')
     @commands.guild_only()
     async def deregister(self, ctx, game:str):
         queryResult = serversDB.find_one({f'{ctx.guild.id}.{game.lower()}.registry.players.{ctx.author.id}': {'$exists': True}}) 
@@ -59,6 +59,34 @@ class Host(commands.Cog):
         else:
             await ctx.reply(f'{game.capitalize()} is not a possible candidate for deregistration, you are either not registered or the candidate doesn\'t exist')
             
+    @commands.command(name='wipeGame', help='Adds the game as a possible candidate for scheduling and registries')
+    @commands.has_guild_permissions(administrator=True)
+    @commands.guild_only()
+    async def wipeGame(self, ctx, game:str):
+        queryResult = serversDB.find_one({f'{ctx.guild.id}.{game.lower()}': {'$exists': True}}) 
+        if queryResult:
+            registry = queryResult[str(ctx.guild.id)][game.lower()]['registry']['players']
+            if queryResult[str(ctx.guild.id)][game.lower()]['role']:
+                role = ctx.guild.get_role(queryResult[str(ctx.guild.id)][game.lower()]['role'])
+                for key, _ in registry.items():
+                    user = ctx.message.guild.get_member(int(key))
+                    if user:
+                        if role in user.roles:
+                            await user.remove_roles(role)
+
+            if serversDB.find({f'{ctx.guild.id}.{game.lower()}.registry.embed': {'$exists': True}}).count() > 0:
+                channel = self.bot.get_channel(int(queryResult[str(ctx.guild.id)][game.lower()]['registry']['channel']))
+                embed = await channel.fetch_message(int(queryResult[str(ctx.guild.id)][game.lower()]['registry']['embed']))
+                await embed.edit(embed=await self.generateEmbed(ctx, game))
+            
+            serversDB.update({str(ctx.guild.id): {'$exists': True}}, {'$set': {f'{ctx.guild.id}.{game.lower()}.registry.players': {}}}, upsert=True)
+            await ctx.reply(f'Succesfully wiped the registry of {game.lower()}')
+
+        else:
+            await ctx.reply(f'{game.capitalize()} is not a possible candidate for registries, try correcting the game name')
+
+        
+
     @commands.command(name='addGame', help='Adds the game as a possible candidate for scheduling and registries')
     @commands.has_guild_permissions(administrator=True)
     @commands.guild_only()
