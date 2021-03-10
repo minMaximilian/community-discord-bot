@@ -29,7 +29,7 @@ class Host(commands.Cog):
         if queryResult:
             serversDB.update({str(ctx.guild.id): {'$exists': True}}, {'$set': {f'{ctx.guild.id}.{game.lower()}.registry.players.{ctx.author.id}': tag}}, upsert=True)
             await ctx.reply(f'Succesfully added {tag} to the player {ctx.message.author.mention} to the {game.capitalize()} registry', mention_author=False)
-            if serversDB.find({f'{ctx.guild.id}.{game.lower()}.registry.embed': {'$exists': True}}).count() > 0:
+            if queryResult[str(ctx.guild.id)][game.lower()]['registry']['embed']:
                 channel = self.bot.get_channel(int(queryResult[str(ctx.guild.id)][game.lower()]['registry']['channel']))
                 embed = await channel.fetch_message(int(queryResult[str(ctx.guild.id)][game.lower()]['registry']['embed']))
                 await embed.edit(embed=await self.generateEmbed(ctx, game))
@@ -43,21 +43,29 @@ class Host(commands.Cog):
     @commands.command(name='deregister', help='Allows deregistration from a game')
     @commands.guild_only()
     async def deregister(self, ctx, game:str):
-        queryResult = serversDB.find_one({f'{ctx.guild.id}.{game.lower()}.registry.players.{ctx.author.id}': {'$exists': True}}) 
+        await self.removeFromRegistration(ctx, ctx.author, game)
+
+    @commands.command(name='removeRegistration', help='Allows deregistration from a game')
+    @commands.has_guild_permissions(administrator=True)
+    @commands.guild_only()
+    async def removeRegistration(self, ctx, user: discord.Member, game:str):
+        await self.removeFromRegistration(ctx, user, game)
+
+    async def removeFromRegistration(self, ctx, user, game):
+        queryResult = serversDB.find_one({f'{ctx.guild.id}.{game.lower()}.registry.players.{user.id}': {'$exists': True}}) 
         if queryResult:
-            serversDB.update_one({str(ctx.guild.id): {'$exists': True}}, {'$unset': {f'{ctx.guild.id}.{game.lower()}.registry.players.{ctx.author.id}': ''}})
-            await ctx.reply(f'Succesfully deregistered {ctx.message.author.mention} from the {game.capitalize()} registry', mention_author=False)
-            if serversDB.find({f'{ctx.guild.id}.{game.lower()}.registry.embed': {'$exists': True}}).count() > 0:
+            serversDB.update_one({str(ctx.guild.id): {'$exists': True}}, {'$unset': {f'{ctx.guild.id}.{game.lower()}.registry.players.{user.id}': ''}})
+            await ctx.reply(f'Succesfully deregistered {user.mention} from the {game.capitalize()} registry', mention_author=False)
+            if queryResult[str(ctx.guild.id)][game.lower()]['registry']['embed']:
                 channel = self.bot.get_channel(int(queryResult[str(ctx.guild.id)][game.lower()]['registry']['channel']))
                 embed = await channel.fetch_message(int(queryResult[str(ctx.guild.id)][game.lower()]['registry']['embed']))
                 await embed.edit(embed=await self.generateEmbed(ctx, game))
             if queryResult[str(ctx.guild.id)][game.lower()]['role']:
-                user = ctx.message.author
                 role = ctx.guild.get_role(queryResult[str(ctx.guild.id)][game.lower()]['role'])
                 if role in user.roles:
                     await user.remove_roles(role)
         else:
-            await ctx.reply(f'{game.capitalize()} is not a possible candidate for deregistration, you are either not registered or the candidate doesn\'t exist')
+            await ctx.reply(f'{game.capitalize()} is not a possible candidate for deregistration, or the person you want to deregister isn\'t registered')
             
     @commands.command(name='wipeGame', help='Adds the game as a possible candidate for scheduling and registries')
     @commands.has_guild_permissions(administrator=True)
