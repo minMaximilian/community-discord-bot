@@ -1,4 +1,4 @@
-name: ci
+name: discord-bot
 
 on:
   push:
