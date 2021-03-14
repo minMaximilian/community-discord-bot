@@ -13,7 +13,7 @@ class Help(commands.Cog):
             for cog in self.bot.cogs:
                 for command in self.bot.get_cog(cog).get_commands():
                     if command.name == commandReq:
-                        descriptor += f'***{cog}\n'
+                        descriptor += f'***{cog}***\n'
                         descriptor += f'**COMMAND:** {command.name},\n*{command.help}*\n\n'
                         break
         else:
