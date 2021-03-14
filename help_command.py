@@ -11,7 +11,7 @@ class Help(commands.Cog):
         descriptor = ''
         if commandReq:
             for cog in self.bot.cogs:
-                for command in self.bot.get_cog(cog).get_command():
+                for command in self.bot.get_cog(cog).get_commands():
                     if command == commandReq:
                         descriptor += f'***{cog}\n'
                         descriptor += f'**COMMAND:** {command.name},\n*{command.help}*\n\n'
